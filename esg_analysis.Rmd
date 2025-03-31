@@ -1,0 +1,888 @@
+---
+title: "**ESG Scores Under Scrutiny: <br>**"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+        collapsed: true
+        smooth_scroll: true
+    toc_depth: 3
+    number_sections: true
+    self_contained: true
+---
+
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+#TOC {
+  color: #021E36;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 14px;
+  border: 2px solid #021E36; 
+  background-color: white; 
+  margin-top: 20px;
+}
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover{
+  z-index: 2;
+  color: #fff;
+  background-color: #021E36;
+  border-color: #021E36;
+}
+body {
+  color: #021E36;
+  font-family: 'Josefin Sans', sans-serif;
+  background-color: #fffff;
+  font-size: 15px;
+}
+h1 {
+  font-family: 'Josefin Sans', sans-serif;
+  color: white; /* Text color */
+  font-size: 25px;
+  background-color: #021E36; /* Background color */
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px; /* Padding around the text */
+  margin-bottom: 20px; /* Space below the header */
+}
+h2{
+  font-family: 'Josefin Sans', sans-serif;
+  color: white; /* Text color */
+  font-size: 22px;
+  background-color: #021E36; /* Background color */
+  opacity: 0.8;
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px; /* Padding around the text */
+  margin-bottom: 20px; /* Space below the header */
+}
+h3{
+  font-family: 'Josefin Sans', sans-serif;
+  color: white; /* Text color */
+  font-size: 18px;
+  background-color: #021E36; /* Background color */
+  opacity: 0.4;
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px; /* Padding around the text */
+  margin-bottom: 20px; /* Space below the header */
+}
+h4{
+  font-family: 'Josefin Sans', sans-serif;
+  color: 021E36;
+  font-size: 15px;
+  background-color: #ffffff; 
+  margin-bottom: 10px; 
+}
+h1.title {
+  color: #021E36;
+  background-color: #ffffff;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 40px;
+  padding: 0;
+  margin-left: 0;
+  margin-bottom: 0px;
+}
+h2.subtitle {
+  font-family: 'Josefin Sans', sans-serif;
+  color: #021E36; 
+  background-color: #ffffff;
+  opacity: 0.8;
+  font-size: 25px;
+  margin-bottom: 20px; 
+  padding: 0px;
+}
+h4.date {
+  font-family: 'Josefin Sans', sans-serif;
+  color: 021E36;
+  font-size: 17px;
+  background-color: #ffffff; 
+  margin-bottom: 30px; 
+  margin-left: 0;
+}
+h4.author {
+  font-family: 'Josefin Sans', sans-serif;
+  color: 021E36;
+  font-size: 17px;
+  background-color: #ffffff; 
+  margin-left: 0;
+}
+pre {
+  color: #708090;
+  background-color: #F8F8FF;
+}
+.text, .title, .axis-title, .legend, .label, .plot-title, .axis-title, .axis-text {
+  font-family: 'Josefin Sans', sans-serif;
+  color: #021E36;
+}
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  fig.align = "center", 
+  out.width = '100%',
+  fig.width = 10,
+  fig.height = 6,
+  echo = TRUE,
+  message = FALSE, 
+  warning = FALSE)
+```
+
+```{r loading_libraries}
+if(!require(liver)) install.packages("liver")
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(pROC)) install.packages("pROC")
+if(!require(dplyr)) install.packages("dplyr")
+if(!require(readr)) install.packages("readr")
+if(!require(tidyr)) install.packages("tidyr")
+if(!require(kableExtra)) install.packages("kableExtra")
+if(!require(showtext)) install.packages("showtext")
+if(!require(grid)) install.packages("grid")
+if(!require(naivebayes)) install.packages("naivebayes")
+if(!require(psych)) install.packages("psych")
+if(!require(ggcorrplot)) install.packages("ggcorrplot")
+
+# Load libraries
+library(liver)  
+library(ggplot2)   
+library(pROC)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(kableExtra)
+library(showtext)
+library(grid)
+library(naivebayes)
+library(psych) 
+library(ggcorrplot)
+```
+ 
+```{r global_tables, include=FALSE}
+# Define a custom function for formatted table output
+my_kable <- function(x, caption = NULL) {
+  kable(x, caption = caption) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = TRUE, font_size = 12) %>%
+    scroll_box(width = "100%", height = "auto", box_css = "overflow-x: auto;")
+}
+```
+
+```{r global_theme, include=FALSE}
+custom_theme <- theme(
+  text = element_text(family = "Josefin Sans", color = "#021E36"),
+  plot.title = element_text(size = 14, face = "bold", hjust = 0, color = "#021E36"),
+  
+  axis.title = element_text(size = 12, face = "plain", color = "#021E36"),
+  axis.text = element_text(size = 10, color = "#021E36"),
+  axis.line = element_line(color = "#021E36"),
+  
+  plot.background = element_rect(fill = "#f0f4f8", color = NA),
+  panel.background = element_rect(fill = "#ffffff", color = NA),
+  
+  panel.grid.major = element_line(color = "#d3d3d3"),
+  panel.grid.minor = element_blank(),
+  
+  legend.background = element_rect(fill = "#f0f4f8"),
+  legend.title = element_text(size = 12, face = "bold", color = "#021E36"),
+  legend.text = element_text(size = 10, color = "#021E36")
+)
+theme_set(theme_minimal() + custom_theme)
+```
+
+<h2 class="subtitle">Analyzing the Relatinship Between ESG Scores and Stock Performance of S&P 500 Companies</h2>
+<h4 class="author">Domonkos Toth</h2>
+<h4 class="date">`r format(Sys.Date(), '%d %B %Y')`</h4>
+
+# Introduction
+
+In recent years, Environmental, Social, and Governance (ESG) scores have played a central role in helping investors assess corporate responsibility and sustainability. However, the hype around ESG scores and their purported significance in demonstrating a company’s commitment to sustainability is increasingly being called into question. According to a report by the Cambridge Institute for Sustainability Leadership (Hooper & Gilding, 2024), as cited in a [Financial Times article] (https://on.ft.com/3MQZX7u), several reasons have emerged prompting a reconsideration of current approaches to corporate sustainability. The report argues that while ESG has fostered awareness and action towards corporate responsibility, it has ultimately failed to deliver on the transformative changes needed to address global sustainability issues. The report highlights that, despite progress in areas like renewable energy, businesses are still contributing to environmental degradation at unsustainable rates. This is largely due to the tension between short-term profitability and long-term sustainability, a conflict that ESG initiatives alone could not resolve. 
+ 
+  Therefore, the authors of the report call for a transformative shift from traditional ESG frameworks to what they term "competitive sustainability". This model would require businesses to not only set internal sustainability goals but also drive structural changes across entire markets. This approach recognizes that no business can thrive in an unsustainable market, and incremental efforts at corporate sustainability will remain inadequate without systemic shifts. However, it goes without saying that this shift will require stronger policy interventions, including government actions that align market incentives with sustainability goals. 
+  
+  Unfortunately, this transformative shift towards "competitive sustainability" is exceedingly difficult to materialize in today’s global political landscape. Many governments are increasingly prioritizing short-term economic output over long-term sustainability commitments. The war in Ukraine and its ensuing geopolitical instability have led numerous countries to shift their focus towards defense initiatives and energy security, rather than accelerating their climate goals. Additionally, the economic recovery from the COVID-19 pandemic has prompted some nations to prioritize immediate economic growth and stability, often at the expense of sustainability initiatives. This political environment creates a serious challenge for implementing the systemic changes. As governments face pressure to maintain economic output, they may become reluctant to introduce or enforce stricter sustainability regulations, despite the clear need for them to align market incentives with environmental and social goals.
+ 
+  However, the introduction of frameworks like the Corporate Sustainability Reporting Directive (CSRD), part of the European Green Deal, offers a glimmer of hope. The CSRD requires companies to provide detailed reports on how their operations impact the environment, as well as their plans to mitigate these effects (Corporate Sustainability Reporting, n.d.). It aims to foster greater transparency and accountability, pushing businesses to align more closely with sustainability goals while avoiding attempts for greenwashing. Even though, it is primarily a European initiative, the CSRD sets a precedent for the kind of government intervention needed to drive the "competitive sustainability" model advocated in the report. By mandating that companies disclose non-financial metrics such as their environmental footprint, the CSRD helps to create market pressure that could eventually lead to broader, systemic shifts.
+  
+  The growing awareness of the shortcomings of ESG metrics, particularly with regard to greenwashing, and the fragility of global systems, suggests that we are indeed moving beyond ESG scores as the primary tool for evaluating corporate responsibility. While ESG scores may still have limited value, they are increasingly seen as insufficient for measuring the resilience of businesses in today’s volatile political and economic landscape. Thus, given this evolving context, a key business problem arises in how companies should navigate these uncertain times when it comes to corporate sustainability and whether ESG scores still offer value in evaluating sustainability or economic performance, or reliance should shift entirely to more detailed reporting frameworks like the CSRD. Analyzing the relationship between ESG scores and stock performance in this context can help businesses understand whether ESG scores still provide meaningful insights into financial performance. By addressing this problem, businesses can develop strategies that meet both investor expectations and regulatory demands, ensuring that their sustainability reporting is both effective and transparent.
+  
+  As existing literature shows, research has been conducted on the potential financial benefits of ESG scores; however, the results remain mixed and inconclusive, leaving room for further investigation to fully understand their impact on stock performance. (Ademi & Klungseth, 2022, Darolles et al., 2023)
+
+**Research Question:**
+*To what extent do ESG scores predict financial performance and market stability for companies within the S&P 500, and how useful are these scores in driving sustainable growth and investor confidence, especially as they face increasing criticism for their reliability and effectiveness?*
+
+
+# Data Preprocessing
+
+The raw data used in this project was found on Kaggle, a popular platform for data science projects, which provides a variety of datasets on diverse topics. The datasets utilized for this analysis was contributed by a Kaggle user and includes S&P 500 stock prices in a timeseries format and ESG (Environmental, Social, Governance) scores with other financial metrics. The ESG data, provided in the dataset, was collected to give an overview of corporate sustainability practices and their relationship with financial performance. The stock price data, spans from 2023 to 2024, offering an up-to-date perspective on stock movements for the largest public companies in the U.S.
+
+While the dataset provides robust financial and sustainability data, in order to enrich the analysis, additional variables were derived from the stock price data. For instance, a measure of stock price volatility was calculated based on daily fluctuations, and log returns were used to assess average stock performance. The S&P 500 index was chosen because it represents the largest 500 publicly traded companies in the U.S., serving as a barometer of the overall economic health of the country.
+
+See the python code for scraping the data from the web here: [S&P 500 ESG and Stocks Data 2023-24](https://www.kaggle.com/code/rikinzala/s-p-500-esg-stocks-data-2023-24)
+
+## Loading the `esg_data` and `price_data` datasets
+Before delving into statistical analysis and building predictive models, the dataset components were thoroughly inspected, and the CSV files were imported into R for data preprocessing and exploration.
+
+```{r data}
+setwd("/Users/todomonkos/Documents/University/Year 4/Data Wrangling/Assignments/Final Project")
+
+# Load the datasets
+esg_data <- read.csv("sp500_esg_data.csv")
+price_data <- read.csv("sp500_price_data.csv")
+```
+
+### Inspecting the `esg_data` dataset
+
+**Head of the `esg_data` dataset:**
+```{r, echo = FALSE}
+my_kable(head(esg_data))
+```
+
+**Summary of the `esg_data` dataset:**
+```{r, echo = FALSE}
+summary(esg_data)
+```
+
+**Structure of the `esg_data` dataset:**
+```{r, echo = FALSE}
+str(esg_data)
+```
+
+After inspecting the `esg_data` dataset, we can see that `highestControversy` and `overallRisk` are not indicated as their true variable type. Therefore, we have to change this:
+```{r}
+esg_data$highestControversy <- factor(esg_data$highestControversy, levels = 0:10, ordered = TRUE)
+esg_data$overallRisk <- factor(esg_data$overallRisk, levels = 1:10, ordered = TRUE)
+str(esg_data)
+```
+
+### Inspecting the `price_data` dataset
+
+**Head of the `price_data` dataset:**
+```{r}
+my_kable(head(price_data))
+```
+
+**Structure of the `price_data` dataset:**
+```{r}
+str(price_data[,1:10 ])
+```
+
+
+## Merging the `esg_data` with `price_data` dataset
+To explore the relationship between ESG scores and stock performance, we need to merge the two original datasets: one containing ESG metrics (`esg_data`) and the other containing stock price time series data (`price_data`). Before performing the merge, the stock price data required reshaping and summarization to align with the structure of the `esg_data`. 
+
+**Reshaping the Stock Price Timeseries Data**
+The stock price data is stored in a wide format, with each column representing the stock prices of different companies over time. In order to perform calculations and merge the data with ESG scores, the stock price data is reshaped into a long format using the `pivot_longer()` function from the `tidyr` package.
+```{r}
+price_data_long <- price_data %>%
+  tidyr::pivot_longer(cols = -Date, names_to = "Symbol", values_to = "Stock_Price")
+```
+
+**Grouping by Symbol to Calculate Stock Performance Metrics**
+After the stock `price_data` is reshaped, key financial performance metrics can be calculated for each company. This step is important as it enables us to summarize the time series data into a single row for each company. Therefore, this step makes the now reshaped `price_data_long` compatible with the ESG dataset for merging. The `group_by()` function is used to calculate these metrics per company using the `Symbol` for each S&P 500 companies in the dataset.
+```{r}
+# Grouping by 'Symbol' to calculate metrics
+price_summary <- price_data_long %>%
+  group_by(Symbol) %>%
+  summarise(
+    avg_price = mean(Stock_Price, na.rm = TRUE),
+    total_return = (last(Stock_Price) - first(Stock_Price)) / first(Stock_Price) * 100,
+    avg_log_return = mean(log(Stock_Price / lag(Stock_Price)), na.rm = TRUE),
+    volatility = sd(Stock_Price, na.rm = TRUE),
+    max_drawdown = (min(Stock_Price, na.rm = TRUE) - max(Stock_Price, na.rm = TRUE)) / max(Stock_Price, na.rm = TRUE) * 100
+  )
+```
+
+*Financial metrics calculated from the `price_data` dataset* <br>
+- `avg_price`: The average stock price over the entire time series, providing a basic measure of central tendency. <br>
+- `total_return`: The total return on the stock, calculated as the percentage change from the first to the last stock price in the time series. This metric is critical for understanding the overall performance of the stock over time. <br>
+- `avg_log_return`: The average log return of the stock, calculated as the mean of the logarithmic daily returns. Log returns are often used in financial analyses because they are additive over time, making them useful for cumulative return calculations. <br>
+- `volatility`: The standard deviation of the stock prices over time, which measures the stock’s variability or risk. High volatility typically indicates more uncertainty in stock performance. <br>
+- `max_drawdown`: The maximum drawdown represents the worst peak-to-trough decline in stock price during the time period, expressed as a percentage. This is an important risk metric, as it shows the potential loss an investor could have experienced by holding the stock. <br>
+
+**Inspecting the `price_summary` dataset**
+```{r}
+my_kable(head(price_summary))
+```
+
+**Merging the `esg_data` and `price_summary` datasets:** <br>
+After transforming the `price_data` timeseries into the `price_summary` dataset, we can merge the summary with the ESG data to create a combined dataset which is suitable for analyzing the relationship between ESG data and stock performance. The `egs_stock_combined` dataset is exported into a CSV file with row names set to the `Symbol` column. 
+```{r}
+esg_stock_combined <- merge(esg_data, price_summary, by = "Symbol")
+row.names(esg_stock_combined) <- esg_stock_combined$Symbol
+esg_stock_combined <- esg_stock_combined %>% 
+  select(-Symbol)
+write.csv(esg_stock_combined, "/Users/todomonkos/Documents/University/Year 4/Data Wrangling/Assignments/Final Project/esg_stock_combined.csv", row.names = TRUE)
+```
+
+### Combined dataset
+**Inspecting the combined dataset:**
+```{r}
+my_kable(head(esg_stock_combined))
+```
+
+**Inspecting the structure of the combined dataset:**
+```{r}
+str(esg_stock_combined)
+```
+From the output, we can discern that the dataset comprises `r nrow(esg_stock_combined)` entries spanning across `r ncol(esg_stock_combined)` distinct variables:
+
+```{r}
+column_classes_combined <- lapply(esg_stock_combined, class)
+classify_variable_combined <- function(class) {
+  if (class %in% c("factor", "character")) {
+    return("categorical")
+  } else if (class == "integer") {
+    return("discrete")
+  } else if (class %in% c("numeric", "double")) {
+    return("continuous")
+  } else {
+    return("other")
+  }
+}
+
+variable_types <- sapply(column_classes_combined, function(cls) classify_variable_combined(cls[[1]]))
+
+# List of explanations for each variable
+variable_explanations <- c(
+  "Full name of the company",
+  "Sector the company operates in",
+  "Sub-industry classification",
+  "Environmental score of the company",
+  "Social score of the company",
+  "Governance score of the company",
+  "Total ESG score",
+  "Highest controversy rating associated with the company",
+  "Percentile rank of ESG score",
+  "Year of ESG rating",
+  "Month of ESG rating",
+  "Market capitalization of the company",
+  "Beta coefficient of the company stock",
+  "Overall risk level of the company",
+  "Average stock price over the time period",
+  "Total stock return over the time period",
+  "Average log return of the stock",
+  "Volatility of the stock prices",
+  "Maximum drawdown experienced by the stock"
+)
+
+# Creating a data frame for the variable types and explanations
+variable_summary <- data.frame(
+  Variable = names(variable_types),
+  Type = variable_types,
+  Description = variable_explanations,
+  stringsAsFactors = FALSE,
+  row.names = NULL
+)
+
+my_kable(variable_summary)
+```
+
+
+## Data cleaning 
+**Handling missing values** 
+In order to ensure the dataset is complete and does not have any missing values, we first check for missing data using the `is.na()` function.
+```{r}
+sum(is.na(esg_stock_combined))
+```
+The result was `r sum(is.na(esg_stock_combined))`, indicating that there are no missing values in the dataset. As such, no imputation or further handling of missing data is required for this analysis.
+
+**Checking for outliers** <br>
+Outliers in the data can skew analysis results, so it is important to check for and handle them accordingly. A summary of key financial performance variables, namely `total_return`, `volatility`, and `max_drawdown`, was generated to get an overview of the data.
+```{r}
+summary(select(esg_stock_combined, total_return, volatility, max_drawdown))
+```
+
+From the summary, we can observe that there are some extreme values, particularly in `total_return` and `volatility`, which may be considered outliers. To further investigate, we made boxplots for each of the variables:
+```{r}
+p1 <- ggplot(esg_stock_combined, aes(x = "", y = total_return)) + geom_boxplot() + ggtitle("Total Return") + theme(plot.title = element_text(hjust = 0.5, size = 10)) + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+p2 <- ggplot(esg_stock_combined, aes(x = "", y = volatility)) + geom_boxplot() + ggtitle("Volatility") + theme(plot.title = element_text(hjust = 0.5, size = 10)) + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+p3 <- ggplot(esg_stock_combined, aes(x = "", y = max_drawdown)) + geom_boxplot() + ggtitle("Max Drawdown") + theme(plot.title = element_text(hjust = 0.5, size = 10)) + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+```
+These boxplots visually highlight the presence of outliers, particularly in the `total_return` and `volatility` variables, where there are extreme values beyond the typical range. <br>
+<br>
+We focuse here specifically on `total_return`, `volatility`, and `max_drawdown` because these variables are fundamental indicators of financial performance and risk, particularly for companies in the context of investment analysis. Other variables, such as environmental, social, and governance scores (ESG), provide insight into a company’s sustainability practices but they do not necessarily reflect directly the financial outcomes. Thus, these three variables were chosen because they directly influence investor decision-making and are critical for evaluating financial returns and associated risks: <br>
+- Extreme values in `total_return`, such as very high gains or large losses, can distort overall trends and affect model accuracy. Winsorization caps these extremes, ensuring that the analysis remains focused on typical performance without being skewed by rare outliers. <br>
+- `volatility` often contains extreme spikes due to market shocks or speculative movements. These outliers can mislead the analysis by overemphasizing rare events. Winsorization reduces the impact of these extreme values. <br>
+Large ``max_drawdown` are often the result of extraordinary events, such as market crashes or company-specific crises. While important to consider, these extreme cases can overly influence the overall analysis. Winsorization helps limit the effect of such extremes. <br>
+<br>
+**Apply Winsorization to limit extreme values at 5% and 95%** <br>
+To handle the identified outliers, Winsorization was applied to the financial variables (`total_return`, `volatility`, and `max_drawdown`). Winsorization reduces the influence of extreme values by limiting them to the 5th and 95th percentiles. This approach ensures that extreme outliers are capped without being entirely removed from the dataset.
+```{r}
+data_cleaned <- esg_stock_combined %>%
+  mutate(total_return = winsor(total_return, trim = 0.05),
+         volatility = winsor(volatility, trim = 0.05),
+         max_drawdown = winsor(max_drawdown, trim = 0.05))
+
+summary(select(data_cleaned, total_return, volatility, max_drawdown))
+```
+From this output, we can observe that extreme values have been reduced compared to the previous summary, improving the dataset’s distribution.<br>
+<br>
+**Visualizing the data after the Winsorization**<br>
+Here, we create boxplots for the Winsorized data to visually compare the distributions before and after Winsorization:
+```{r}
+p4 <- ggplot(data_cleaned, aes(x = "", y = total_return)) + geom_boxplot() + ggtitle("Total Return After Winsorization") + theme(plot.title = element_text(hjust = 0.5, size = 10)) + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+p5 <- ggplot(data_cleaned, aes(x = "", y = volatility)) + geom_boxplot() + ggtitle("Volatility After Winsorization") + theme(plot.title = element_text(hjust = 0.5, size = 10)) + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+p6 <- ggplot(data_cleaned, aes(x = "", y = max_drawdown)) + geom_boxplot() + ggtitle("Max Drawdown After Winsorization") + theme(plot.title = element_text(hjust = 0.5, size = 10)) + theme(plot.margin = unit(c(1,1,1,1), "cm"))
+
+gridExtra::grid.arrange(p4, p5, p6, nrow = 1)
+```
+These plots show that Winsorization improved distribution of the variables. The extreme values seen in the earlier boxplots have now been capped, leading to a more normalized range of values for each financial performance variable.
+
+# Exploratory Data Analysis
+With the data cleaned, we have now a more refined and reliable version of the data. This cleaning process was essential in making sure that the dataset is suitable for further analysis, reducing the risk of skewed results due to anomalies or inaccuracies by dealing with outliers and inconsistencies. 
+
+With the data prepared, we can now move on to the Exploratory Data Analysis (EDA) phase of the project. In this part, we focus on gaining deeper understanding of the dataset’s structure and relationships to uncover potential trends or patterns. Through visualizations and summary statistics, we will explore the relationships between the key variables, particularly the ESG scores and the target variable `total_return`. This exploration helps us to spot any interesting patterns in the data and set the foundation for the modeling phase, where we dig deeper into how ESG scores might impact financial performance.
+ 
+## Distribution of the target variable: `total_return`
+To better understand the distribution of the `total_return` variable, a histogram was created with a normal distribution curve:
+
+```{r}
+ggplot(data_cleaned, aes(x = total_return)) +
+  geom_histogram(aes(y = ..density..), bins = 30, color = "black", fill = "lightblue") +
+  stat_function(fun = dnorm, args = list(mean = mean(data_cleaned$total_return), 
+                                         sd = sd(data_cleaned$total_return)), 
+                color = "red", size = 1) +
+  labs(title = "Histogram of Total Return with Normal Curve", 
+       x = "Total Return", y = "Density") 
+```
+**Interpretation** <br>
+The histogram reveals that the distribution of `total_return` is somewhat right-skewed, with most values clustered around 20 to 40. This skewness indicates that while the majority of companies have low or negative returns, there are some companies which exhibit positive returns.
+<br>
+By overlaying a normal curve (red line), we can compare the actual distribution of the `total_return` to a normal distribution.
+The normal curve in red does not perfectly align with the histogram, indicating that the data does not follow a normal distribution. However, the curve shows that many of the observations are concentrated near the mean value of the distribution. This highlights that the data may require some transformation for modeling purposes later on, as many statistical models assume normality.
+
+## Distribution of the `marketCap` variable
+To better understand the distribution of the `marketCap` variable, a histogram was created with a normal distribution curve:
+```{r}
+ggplot(data_cleaned, aes(x = marketCap)) +
+  geom_histogram(aes(y = ..density..), bins = 30, color = "black", fill = "lightblue") +
+  stat_function(fun = dnorm, args = list(mean = mean(data_cleaned$marketCap), 
+                                         sd = sd(data_cleaned$marketCap)), 
+                color = "red", size = 1) +
+  labs(title = "Histogram of Market Capitalization", 
+       x = "Market Capitalization", y = "Density") 
+```
+
+## ESG variables 
+Now that we have covered the target variable, we shift our focus to the ESG variables: `environmentScore`, `socialScore`, `governanceScore`. These components of the analysis are important for the analysis, as they represent a company’s commitment to sustainable practices across different areas.
+
+To begin with, we will look at the individual distributions of each ESG component. This helps us to understand the range of scores across companies and whether any component has more variation than the others.
+```{r}
+esg_plot_1 <- ggplot(data_cleaned, aes(x = environmentScore)) + 
+  geom_histogram(binwidth = 1, fill = "#021E36", color = "white") +
+  labs(title = "Distribution of Environment Score", x = "Environment Score", y = "Count") +
+  theme_minimal(base_family = "Josefin Sans")
+
+esg_plot_2 <- ggplot(data_cleaned, aes(x = socialScore)) + 
+  geom_histogram(binwidth = 1, fill = "#021E36", color = "white") +
+  labs(title = "Distribution of Social Score", x = "Social Score", y = "Count") +
+  theme_minimal(base_family = "Josefin Sans")
+
+esg_plot_3 <- ggplot(data_cleaned, aes(x = governanceScore)) + 
+  geom_histogram(binwidth = 1, fill = "#021E36", color = "white") +
+  labs(title = "Distribution of Governance Score", x = "Governance Score", y = "Count") +
+  theme_minimal(base_family = "Josefin Sans")
+
+gridExtra::grid.arrange(esg_plot_1, esg_plot_2, esg_plot_3, nrow = 1)
+```
+**Interpretation:**
+- Environmental Score: Skewed to the right, with most companies scoring low, suggesting that high environmental performance is less common.
+- Social Score: More evenly distributed, resembling a normal distribution, indicating consistent performance across companies in social responsibility.
+- Governance Score: Also right-skewed, with most companies scoring in the mid-range, showing some variation but fewer companies with extremely high governance practices.
+
+## ESG by GICS Sector
+After seeing the distribution of different ESG variables, we move on to see how the ESG scores differ across GICS sectors. The `GICS.Sector` variable in the dataset categorizes companies based on their industry sectors, providing valuable context for understanding how ESG scores might vary across different types of businesses. Different sectors may prioritize environmental, social, or governance factors differently depending on the nature of their operations. For example, companies in sectors like Energy or Utilities may face greater environmental scrutiny, while sectors such as Financials might place more emphasis on governance practices.
+
+By analyzing the distribution of ESG scores across different GICS sectors, we can gain insights into how sector-specific challenges and priorities influence a company's performance in these areas. This exploration will help us to determine whether certain sectors are more prone to excelling in specific ESG components.
+
+### Distribution of Companies across GICS sectors
+```{r}
+sector_summary <- data_cleaned %>%
+  group_by(GICS.Sector) %>%
+  summarize(Count = n())
+
+ggplot(sector_summary, aes(x = reorder(GICS.Sector, -Count), y = Count, fill = GICS.Sector)) +
+  geom_bar(stat = "identity") + 
+  labs(title = "Number of Companies by GICS Sector",
+       x = "GICS Sector",
+       y = "Number of Variables") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+On the plot each bar represents a different sector, giving us a clear overview of how the dataset is distributed across industries. It seems that `Financials` has the most representation in the dataset, with over 60 companies. `Industrials and Information Technology` are also highly represented, with close to 60 companies each. This suggests that these sectors might have a larger influence on the overall trends in the data, particularly in terms of ESG scores and financial performance.
+
+### ESG Score distribution by GICS Sector
+```{r}
+ggplot(data_cleaned, aes(x = GICS.Sector, y = environmentScore, fill = GICS.Sector)) + 
+  geom_boxplot() +
+  labs(title = "Distribution of Environment Score by GICS Sector", x = "GICS Sector", y = "Environment Score") +
+  theme_minimal(base_family = "Josefin Sans") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+The plot highlights how environmental performance differs greatly by sector, with Energy, Materials, and Consumer Staples sectors leading in environmental scores, while Financials, Health Care, and Communication Services tend to score lower. This variation likely reflects the different levels of environmental risk and regulatory scrutiny that each sector faces. Companies in sectors with higher environmental impacts, like Energy, tend to be under more pressure to improve their sustainability practices, thus, leading to higher scores. However, it is important to highlight that the high score does not mean that their greenhouse gas emission levels are low, rather it is usually on the contrary. 
+
+```{r}
+ggplot(data_cleaned, aes(x = GICS.Sector, y = socialScore, fill = GICS.Sector)) + 
+  geom_boxplot() +
+  labs(title = "Distribution of Social Score by GICS Sector", x = "GICS Sector", y = "Social Score") +
+  theme_minimal(base_family = "Josefin Sans") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+This plot shows how the distribution of social scores varies by sector, with Health Care and Industrials leading in social performance, while sectors like Energy and Real Estate tend to have lower scores. This likely reflects the different social challenges and priorities faced by companies across industries, where sectors with more direct societal impacts, such as Health Care, tend to perform better in social responsibility metrics.
+
+```{r}
+ggplot(data_cleaned, aes(x = GICS.Sector, y = governanceScore, fill = GICS.Sector)) + 
+  geom_boxplot() +
+  labs(title = "Distribution of Governance Score by GICS Sector", x = "GICS Sector", y = "Governance Score") +
+  theme_minimal(base_family = "Josefin Sans") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+This plot shows that sectors such as Financials and Health Care lead in governance scores, likely due to the high level of scrutiny they face from regulators and stakeholders. In contrast, sectors like Utilities, Real Estate, and Materials show lower governance performance, reflecting less emphasis on governance practices in these industries. This distribution highlights the differing priorities and regulatory environments across industries when it comes to corporate governance.
+
+```{r}
+ggplot(data_cleaned, aes(x = GICS.Sector, y = totalEsg, fill = GICS.Sector)) + 
+  geom_boxplot() +
+  labs(title = "Distribution of Total ESG Score by GICS Sector", x = "GICS Sector", y = "Total ESG Score") +
+  theme_minimal(base_family = "Josefin Sans") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Finally, this plot highlights that the Energy and Materials sectors lead in total ESG scores, reflecting the intense focus on sustainability within these industries, while sectors like Financials, Real Estate, and Health Care show lower overall ESG performance. This variation highlights the differing levels of emphasis on ESG practices across industries, with certain sectors facing more pressure to perform in these areas.
+ 
+## Correlation Matrix
+```{r}
+cor_matrix <- cor(data_cleaned[, c("environmentScore", "socialScore", "governanceScore", "totalEsg", "total_return", "marketCap", "volatility")], use = "complete.obs")
+
+ggcorrplot(cor_matrix, method = "circle", lab = TRUE)
+```
+The correlation matrix highlights that while the individual ESG scores are highly correlated with the totalEsg score which is self-explanatory, their relationships with financial metrics like total_return, marketCap, and volatility are quite weak and sometimes negative. This suggests that ESG performance, at least in a linear context, does not have a strong direct impact on financial outcomes like returns or market capitalization. Further analysis might provide deeper insights into how ESG scores could influence financial performance in specific GICS sectors or under certain conditions.
+
+Thus, in the scatter plot down below, we will try to display the relationship between total ESG score and total return, with each GICS sector represented by different colors and corresponding linear regression lines. 
+```{r}
+ggplot(data_cleaned, aes(x = totalEsg, y = total_return, color = GICS.Sector)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship between Total ESG Score and Total Return by GICS Sector",
+       x = "Total ESG Score", y = "Total Return")
+```
+This plot show a quite varied relationship across the sector. Some sectors show a positive relationship, while others show a negative or flat relationship. In cases with positive relationship, such as Consumer Discretionary, Consumer Staples, and Utilities exhibit positive trends, suggesting that in these sectors, companies with higher ESG scores tend to have higher total returns. On the other hand, Information Technology, Energy, and Financials show a negative or flat trend, where an increase in ESG scores does not appear to lead to higher total returns, and may even correspond with lower returns in some cases. This suggests that, for these sectors, ESG initiatives might not be directly driving financial performance, or that other factors could be more influential.
+ 
+However, there is a high degree of scatter within each sector, indicating that even within sectors, the relationship between total ESG score and total return is not perfectly linear. The dispersion of points suggests that other factors (e.g., company size, market conditions) might also play a role in determining total returns. Therefore, it is crucial to further analyse the relationship of ESG scores and financial metrics to see their intricate play, helping to clarify whether these sector-specific trends hold statistically and what other factors might influence the relationship between ESG scores and returns.
+
+# Data Preparation for Modeling
+In this section we partition the `esg_stock_combined` dataset randomly into two groups: `train_set` (80%) and `test_set` (20%). We partition the dataset in order to prepare it for modelling in the subsequent parts of the project. <br>
+<br>
+For partitioning the dataset, we use the `partition()` function from the `liver` package. Note that we are also using the `set.seed()` function for the sake of creating reproducible results. 
+
+```{r}
+set.seed(123)
+
+data_sets = partition(data = data_cleaned, prob = c(0.8, 0.2))
+
+train_set = data_sets$part1
+test_set  = data_sets$part2
+```
+
+## Validating the partition
+In order to validate the partitioning of the dataset `esg_stock_combined`, we conduct a Welch Two-Sample t-test to statistically compare the means of `total_return` between the training and test sets. However, it is important to remember that the t-test assumes that the distribution of the data is normal. 
+
+### Hypothesis for the t-test
+- **Null Hypothesis (H₀)**: The means of **log_total_return** in the training and test sets are equal, indicating that the partitioning does not introduce any bias or significant difference between the two sets.
+
+ $$  H_0: \mu_{\text{train}} = \mu_{\text{test}}  $$
+
+- **Alternative Hypothesis (H₁)**: The means of **total_return** in the training and test sets are not equal, implying that the partitioning has caused a significant difference between the two sets.
+
+ $$   H_1: \mu_{\text{train}} \neq \mu_{\text{test}}  $$
+
+
+### Two-Sample t-test
+```{r}
+t.test(train_set$total_return, test_set$total_return)
+```
+**Statistical interpretation:**
+The result of the t-test showed a *p-value* of 0.5327, which is well above the typical significance level of 0.05. This means that we fail to reject the null hypothesis, which means that there is no statistically significant difference between the means of `total_return` in the training and test sets. <br>
+
+**Non-statistical interpretation:** <br>
+Thus, the t-test provides enough evidence that the partitioning has not introduced any bias in terms of the mean `total_return` between the training and test sets. This ensures that the split is fair, and both sets are likely representative of the overall data. <br>
+
+### Visual confirmation of partitioning
+We use a density plot in order to confirm the findings of the Welch Two-Sample t-test. 
+
+```{r}
+train_set$Set <- "Train"
+test_set$Set <- "Test"
+combined_data <- rbind(train_set, test_set)
+
+ggplot(combined_data, aes(x = total_return, fill = Set)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Density Plot of Total Return (Train vs Test)", x = "Total Return", y = "Density") 
+```
+<br>
+**Interpretation:**
+The plot showed no significant difference between the means of `total_return` in the training and test sets. The density plot shows that the distributions of `total_return` for both the training and test sets are very similar, with a high degree of overlap between the two curves, confirming that the partitioning of the data has maintained consistency in the distribution of the target variable. This alignment between the t-test result and the density plot gives us confidence that the partitioning is balanced and suitable for model development.
+
+## Addressing Skewness Through Log Transformation
+During the earlier distribution analysis of `total_return` and `marketCap`, we observed positive skewness and potential heteroscedasticity in both variables. To stabilize the variance and improve linear modeling assumptions, we apply a log transformation. Since the `total_return` variable contains zero or near-zero values, we use a log(x + 1) transformation to avoid undefined values. Similarly, `marketCap` is also log-transformed to reduce scale effects and skewness. These transformations aim to improve the linear model's fit and satisfy the assumptions of homoscedasticity and normality of residuals.
+```{r}
+epsilon <- 0.01
+train_set$log_total_return <- log(train_set$total_return + epsilon)
+test_set$log_total_return <- log(test_set$total_return + epsilon)
+
+train_set$log_marketCap <- log(train_set$marketCap + epsilon)
+test_set$log_marketCap <- log(test_set$marketCap + epsilon)
+
+train_set$log_percentile <- log(train_set$percentile + epsilon)
+test_set$log_percentile <- log(test_set$percentile + epsilon)
+```
+
+**Checking the distribution for normality of Logarithmic Return in the train and test set**
+```{r}
+library(patchwork)
+
+plot1 <- ggplot(train_set, aes(x = log_total_return)) +
+  geom_histogram(aes(y = ..density..), bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of Logarithmic Return in Train Set", 
+       x = "Log Return", y = "Density") 
+
+plot2 <- ggplot(test_set, aes(x = log_total_return)) +
+  geom_histogram(aes(y = ..density..), bins = 30, color = "black", fill = "lightblue") +
+  labs(title = "Histogram of Logarithmic Return in Test Set", 
+       x = "Log Return", y = "Density") 
+
+plot1 + plot2
+```
+
+### Adding Dummy variables for GICS Sectors
+```{r}
+data_cleaned$GICS.Sector <- as.factor(data_cleaned$GICS.Sector)
+```
+
+# Modeling 
+Modelling the relationship between ESG scores and `total_return` is complicated since the correlation matrix have highlighted above that the individual ESG scores have a really weak and sometimes negative relationship with financial metrics like total_return, marketCap, and volatility. Therefore, in the following modelling variables with weak correlation to total_return are also utilized, such as `environmentScore`, to answer the question of how useful are these ESG scores in driving sustainable growth and investor confidence. 
+
+```{r}
+formula = log_total_return ~ environmentScore + socialScore + governanceScore + totalEsg + highestControversy + log_percentile + ratingYear + log_marketCap + GICS.Sector
+```
+
+### Simple linear regression
+First, we start with a simple linear model which helps to establish a clear baseline for understanding the basic relationships between the dependent variable `total_return` and key independent variables defined in the formula above. This allows us to determine if any variables have a significant impact on total return without the complexity. Moreover, this model is easier to interpret, making them ideal for building a foundation before moving on to more advanced techniques.
+```{r}
+model_simple_linear = lm(formula, data = train_set)
+summary(model_simple_linear)
+```
+
+**Interpretation of the simple linear regression**
+The results indicate that none of the individual ESG components show a statistically significant relationship with `total_return` in this model. This might suggests that ESG performance alone may not directly drive financial outcomes for companies in this dataset. However, market capitalization is positively and significantly associated with total return, meaning that larger companies generally achieve higher financial performance. Additionally, the percentile ranking has a significant negative relationship with total return, indicating that companies ranked higher in ESG performance tend to have slightly lower returns. Overall, the Adjusted R-squared is 0.1582 meaning that the model explains only about 15.82% of the variation in `total_return`, indicating that this simple model might need some refinement but it provides a baseline. 
+
+### Checking for Multicollinearity
+Before refining the model, it is also important to check for multicollinearity among the independent variables. Since the individual ESG components (`environmentScore`, `socialScore`, `governanceScore`) and the aggregate `totalEsg` score are expected to be highly correlated, we calculate the Variance Inflation Factor (VIF) to detect redundancy. A VIF value above 5 or 10 typically indicates problematic multicollinearity that can distort the estimation of regression coefficients.
+```{r}
+if(!require(car)) install.packages("car")
+library(car)
+vif_model <- lm(formula, data = train_set)
+vif(vif_model)
+```
+The results indicate extremely high multicollinearity, with VIF values exceeding 800 for the individual ESG scores and over 1100 for `totalEsg`. This confirms that these variables convey overlapping information. As a result, `totalEsg` should be excluded from further modeling to reduce redundancy and improve model stability. Individual ESG components are preserved for interpretability and allow for more detailed analysis of their effects on financial performance.
+
+As a result, we update the formula:
+```{r}
+formula_refined = log_total_return ~ environmentScore + socialScore + governanceScore + log_percentile + log_marketCap + GICS.Sector
+```
+
+Check to see if multicollinearity is improved:
+```{r}
+vif_model_updated = lm(formula_refined, data = train_set)
+vif(vif_model_updated)
+```
+
+### Verifying Model Assumptions
+```{r}
+model_refined_test = lm(formula_refined, data = train_set)
+plot(model_refined_test)  
+```
+**Interpretation** <br>
+- *Linearity:* <br>
+The Residuals vs. Fitted plot shows that the residuals are scattered fairly symmetrically around the horizontal axis, with no strong curvature or systematic pattern. This suggests that the relationship between the predictors and the log-transformed total return is approximately linear, satisfying the linearity assumption of the model.
+<br>
+- *Independence:* <br>
+There is no discernible structure or clustering in the residuals over the range of fitted values, which would indicate autocorrelation or dependency. This pattern supports the assumption that the residuals are independent and not influenced by serial or grouped effects.
+<br>
+- *Normality:*<br>
+The Q-Q plot shows that most standardized residuals align closely with the theoretical quantiles, though a few observations in both tails deviate from the line. This indicates a roughly normal distribution of residuals, with mild tail deviations that are generally acceptable given the sample size and context.
+<br>
+- *Constant Variance:*<br>
+The Scale-Location plot reveals some variation in the spread of standardized residuals, with slightly higher variance at lower fitted values and a slight downward trend. This suggests the presence of mild heteroscedasticity, which may not invalidate the model but could affect the efficiency of coefficient estimates and standard errors.
+
+## Nonlinear regression
+Based on the diagnostic plots above, there are clear signs that suggest we should explore possible improvements to our model fit and address non-linearity and potential heteroscedasticity. Nonlinear regression could potentially solve these issues because it allows more flexibility in capturing relationships between the independent variables and the dependent variable.
+```{r}
+formula_refined_polynomial <- log_total_return ~ 
+                    poly(environmentScore, 2) + 
+                    poly(socialScore, 2) + 
+                    poly(governanceScore, 2) + 
+                    log_percentile + 
+                    log_marketCap +
+                    GICS.Sector
+
+polynomial_model <- lm(formula = formula_refined_polynomial, data = train_set)
+summary(polynomial_model)
+```
+**Interpretation**
+In this model, we edited the formula of the stepwise regression in order to address the above mentioned problems with non-linearity and potential heteroscedasticity. Since the ESG scores are the core of this analysis and understanding their relationship with financial return are the main goal, we changed only the ESG variables to polynomial terms. This allows us to better capture potential non-linear relationships between the environmental, social, and governance scores and financial performance, without overly complicating the model by introducing non-linearities in other variables like marketCap or percentile. 
+
+This refined polynomial model offers an improvement over the simpler linear model, by capturing non-linear relationships between the ESG scores and `total_return`. However, the overall fit remains relatively low with an Adjusted R-squared score of 0.1846,  indicating that other factors not included in the model may play a significant role in explaining financial performance. 
+
+## Considering the effect of ESG scores accross sectors 
+As we saw above in the exploratory data analysis section that the relationship between ESG scores and total_return was varying across different GICS sectors. Therefore, here we include interaction terms between the ESG scores and the GICS sector. This will allow us to investigate whether the impact of ESG scores on total return varies by sector.
+```{r}
+refined_model_with_gics <- lm(
+  log_total_return ~ 
+    environmentScore * GICS.Sector + 
+    socialScore * GICS.Sector + 
+    governanceScore * GICS.Sector + 
+    log_percentile + 
+    log_marketCap,
+  data = train_set
+)
+summary(refined_model_with_gics)
+```
+
+## Decision tree and random forest 
+```{r}
+if(!require(caret)) install.packages("caret")
+if(!require(randomForest)) install.packages("randomForest")
+if(!require(rpart)) install.packages("rpart")
+
+library(caret)
+library(randomForest)
+library(rpart)
+
+set.seed(123)
+
+# Include relevant variables and convert GICS.Sector to factor
+data_model <- train_set[, c("log_total_return", "environmentScore", "socialScore", "governanceScore",
+                               "highestControversy", "log_percentile", "log_marketCap", "GICS.Sector")]
+data_model <- na.omit(data_model)
+
+ctrl <- trainControl(method = "cv", number = 10)
+```
+
+### Decision tree
+```{r}
+model_tree <- train(
+  log_total_return ~ .,
+  data = data_model,
+  method = "rpart",
+  trControl = ctrl
+)
+```
+
+### Random forest 
+```{r}
+model_rf <- train(
+  log_total_return ~ .,
+  data = data_model,
+  method = "rf",
+  trControl = ctrl,
+  ntree = 500,
+  importance = TRUE
+)
+```
+
+### Run previous linear models with cross validation for better comparison
+```{r}
+train_set <- na.omit(train_set)
+
+model_simple_linear_cv = train(
+  formula,
+  data = train_set,
+  method = "lm",
+  trControl = ctrl,
+)
+  
+model_gics_interaction_cv <- train(
+  log_total_return ~ 
+    environmentScore * GICS.Sector + 
+    socialScore * GICS.Sector + 
+    governanceScore * GICS.Sector + 
+    log_percentile + 
+    log_marketCap,
+  data = train_set,
+  method = "lm",
+  trControl = ctrl,
+)
+```
+
+## Model comparison
+```{r}
+results <- resamples(list("Simple Linear Regression" = model_simple_linear_cv, 
+                          "Linear Model with Interaction Terms" = model_gics_interaction_cv, 
+                          "Decision Tree" = model_tree, 
+                          "Random Forest" = model_rf))
+summary(results)
+```
+
+# Model Evaluation 
+```{r}
+# Generate predictions
+pred_lm_simple <- predict(model_simple_linear_cv, newdata = test_set)
+pred_lm_interact <- predict(model_gics_interaction_cv, newdata = test_set)
+pred_tree <- predict(model_tree, newdata = test_set)
+pred_rf <- predict(model_rf, newdata = test_set)
+
+eval_df <- data.frame(
+  actual = test_set$log_total_return,
+  pred_lm_simple = pred_lm_simple,
+  pred_lm_interact = pred_lm_interact,
+  pred_tree = pred_tree,
+  pred_rf = pred_rf
+)
+
+# Remove rows with any NA
+eval_df <- na.omit(eval_df)
+
+# View results
+eval_results <- rbind(
+  "Simple Linear Regression" = postResample(pred = eval_df$pred_lm_simple, obs = eval_df$actual),
+  "Linear Model with Interaction Terms" = postResample(pred = eval_df$pred_lm_interact, obs = eval_df$actual),
+  "Decision Tree" = postResample(pred = eval_df$pred_tree, obs = eval_df$actual),
+  "Random Forest" = postResample(pred = eval_df$pred_rf, obs = eval_df$actual)
+)
+print(eval_results)
+```
+
+```{r}
+ggplot(data = eval_df, aes(x = actual, y = pred_lm_simple)) +
+  geom_point(alpha = 0.5, color = "#021E36") +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    title = "Predicted vs Actual Log Total Return",
+    x = "Actual Log Total Return",
+    y = "Predicted Log Total Return"
+  ) 
+```
+
+```{r}
+eval_df$residuals <- eval_df$actual - eval_df$pred_lm_simple
+
+ggplot(eval_df, aes(x = pred_lm_simple, y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(
+    title = "Residuals vs Predicted Values",
+    x = "Predicted Log Total Return",
+    y = "Residuals"
+  )
+```
+
+# Deployment 
+The goal of this research project was to assess whether ESG scores can meaningfully explain or predict financial performance, particularly total stock return, across companies listed in the S&P 500 index. Motivated by growing debates on the financial materiality of ESG metrics and the emergence of stricter reporting frameworks like the EU’s Corporate Sustainability Reporting Directive (CSRD), this project sought to determine whether ESG scores still offer useful signals to investors, or whether more detailed, standardized disclosures are necessary.
+
+Following exploratory analysis and several regression models, the simple linear regression model emerged as the most robust and generalizable. When evaluated on the test set, it yielded the lowest Root Mean Squared Error (RMSE = 0.878), lowest Mean Absolute Error (MAE = 0.683), and highest R² (0.216), outperforming more complex models such as those with ESG-sector interaction terms, decision trees, and random forests. This result is particularly notable because it suggests that simpler, more interpretable models may offer better generalization to unseen data than more flexible but complex alternatives.
+
+However, while the linear model performed best among those tested, its explanatory power remains modest—explaining only 21.6% of the variance in log-transformed total return. This supports the conclusion drawn from earlier correlation and residual diagnostics: ESG scores, at least in their current aggregated form, may not serve as strong standalone predictors of financial performance across all sectors. The weak and varying relationships observed across sectors indicate that ESG relevance is likely contingent on industry-specific factors and possibly firm-level heterogeneity.
+
+In deployment, the model can serve as a lightweight diagnostic or benchmarking tool for analysts assessing the financial relevance of ESG metrics. Nonetheless, the limited predictive strength also underscores the need for more granular ESG data and possibly more context-sensitive modeling approaches in future research. Overall, the findings offer cautious support for ESG-based evaluation, while pointing toward the limitations of treating ESG scores as universally predictive.
+
+# References
+Ademi, B., & Klungseth, N. J. (2022). Does it pay to deliver superior ESG performance? Evidence from US S&P 500 companies. Journal of Global Responsibility, 13(4), 421–449. https://doi.org/10.1108/jgr-01-2022-0006 (https://doi.org/10.1108/jgr-01-2022-0006) 
+Corporate sustainability reporting. (n.d.). Finance. https://finance.ec.europa.eu/capital-markets-union-and-financial-markets/company-reporting-and-auditing/company-reporting/corporate-sustainability-reporting_en (https://finance.ec.europa.eu/capital-markets-union-and-financial-markets/company-reporting-and-auditing/company-reporting/corporate-sustainability-reporting_en)
+Darolles, S., He, Y., & Fol, G. L. (2023). Understanding the effect of ESG scores on stock returns using mediation theory. 
+SSRN Electronic Journal. https://doi.org/10.2139/ssrn.4634699 (https://doi.org/10.2139/ssrn.4634699)
