@@ -7,11 +7,13 @@
 This project investigates the extent to which Environmental, Social, and Governance (ESG) scores are informative indicators of financial performance, using a dataset of S&P 500 companies. The research challenges the conventional wisdom of ESG-driven investment strategies and considers whether a shift to more robust reporting frameworks, such as the Corporate Sustainability Reporting Directive (CSRD), is warranted.
 
 ## 📁 Project Structure
+```
 esg_analysis/
 ├── data/             # Raw and processed datasets
 ├── notebooks/        # rmd and html file with analysis
 ├── visualizations/   # Generated plots 
 └── README.md
+```
 
 ## 🎯 Research Questions
 
