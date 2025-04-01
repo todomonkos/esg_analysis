@@ -49,15 +49,10 @@ This project follows a six-step Data Science workflow:
 
 - **R** (tidyverse, caret, ggplot2)
 - **RMarkdown** for reproducible analysis
-- **Josefin Sans** for customized plots
 - **ESG and financial data** sourced from S&P 500 datasets (Kaggle)
-
-## 📚 Academic Context
-
-This project was developed as part of a university data science minor and integrates financial modeling with critical reflections on sustainable investing practices.
 
 ## 📬 Contact
 
-For questions or collaboration ideas, feel free to reach out via [LinkedIn](https://www.linkedin.com) or open an issue on this repository.
+For questions or collaboration ideas, feel free to reach out via [LinkedIn](https://www.linkedin.com/todomonkos) or open an issue on this repository.
 
 ---
